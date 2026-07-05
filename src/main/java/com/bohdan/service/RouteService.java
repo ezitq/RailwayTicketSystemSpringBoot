@@ -1,14 +1,17 @@
 package com.bohdan.service;
 
+import com.bohdan.config.TariffProperties;
 import com.bohdan.entity.*;
 import com.bohdan.entity.dto.RouteResponseDto;
 import com.bohdan.repository.RouteRepository;
 import com.bohdan.repository.StationRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalTime;
+import java.time.temporal.TemporalAmount;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -20,11 +23,14 @@ public class RouteService {
     private final RouteRepository routeRepository;
     private final StationRepository stationRepository;
     private final SeatService seatService;
+    private final TariffProperties tariffProperties;
 
-    public RouteService(RouteRepository routeRepository, StationRepository stationRepository, SeatService seatService) {
+    @Autowired
+    public RouteService(RouteRepository routeRepository, StationRepository stationRepository, SeatService seatService, TariffProperties tariffProperties) {
         this.routeRepository = routeRepository;
         this.stationRepository = stationRepository;
         this.seatService = seatService;
+        this.tariffProperties = tariffProperties;
     }
 
     public List<RouteResponseDto> findRouteByStations(int departureStationId, int arrivalStationId) {
@@ -73,13 +79,18 @@ public class RouteService {
         LocalTime depTime = depSegment.getDepartureTime() != null ? depSegment.getDepartureTime() : depSegment.getArrivalTime();
         LocalTime arrTime = arrSegment.getArrivalTime() != null ? arrSegment.getArrivalTime() : arrSegment.getDepartureTime();
 
+        ComfortType comfortType = route.getTrain().getType();
+        BigDecimal multiplier = tariffProperties.multipliers().get(comfortType);
+
         // Обчислюємо тривалість подорожі на бекенді
         String durationStr = calculateDuration(depTime, arrTime);
 
         // Ціна (якщо в сегменті null, підставляємо базову ціну за замовчуванням)
-        BigDecimal finalPrice = depSegment.getBasePrice() != null ? depSegment.getBasePrice() : new BigDecimal("180.00");
+        BigDecimal basePrice = depSegment.getBasePrice() != null ? depSegment.getBasePrice() : tariffProperties.baseRate();
 
-        finalPrice = finalPrice.add(BigDecimal.valueOf(((long) (arrSegment.getSequenceOrder() - depSegment.getSequenceOrder()) * Price.LOW.getValue())));
+        // TODO: Коли додам кілометраж тут поміняти логіку формування ціни
+
+        BigDecimal finalPrice = basePrice.add(multiplier.multiply(BigDecimal.valueOf(arrTime.getHour() - depTime.getHour())));
 
         return new RouteResponseDto(
                 route.getId(),
@@ -89,7 +100,7 @@ public class RouteService {
                 arrName,
                 arrTime,
                 durationStr,
-                "Плацкарт",
+                "",
                 seatService.findAmountOfSeatsByTrainId(route.getTrain().getId()),
                 finalPrice,
                 route.getDayOfTheWeek()
