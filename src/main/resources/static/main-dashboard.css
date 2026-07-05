@@ -1,0 +1,140 @@
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+    background-color: #3d9fd0;
+    margin: 0;
+    padding: 0;
+    
+    /* ДОДАНО: Ховає контент, що вилазить за межі, та запобігає появі скролбара */
+    overflow: hidden; 
+}
+
+h1{
+    color: #ffffff;
+    font-size: 24px;
+    margin-bottom: 0px;
+}
+
+h2{
+    color: #ffffff;
+    font-size: 18px;
+    margin-top: 0px;
+    margin-bottom: 10px;
+}
+
+/* Main-dashboard */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-content: center;
+    text-align: center;
+    width: 571px;
+    height: 350px;
+    margin: 0;
+    padding: 20px;
+    background-color: #3D7746;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.25);
+    border-radius: 14px;
+}
+
+.routeSelection {
+    /* ЗМІНЕНО: Додаємо відносне позиціонування */
+    position: relative;
+    
+    width: 260px;
+    height: 146px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #4D9658;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    border-radius: 23px;
+}
+
+/* ДОДАНО: Стилі для розміщення потяга справа */
+.train-icon {
+    position: absolute;
+    left: 29%; /* Розміщуємо потяг праворуч від форми */
+    top: 51%;
+    right: 20px;
+    transform: translateY(-50%);
+    
+    /* ЗБІЛЬШЕНО РОЗМІР: Змініть це значення, щоб підігнати під ваш дизайн */
+    width: 1100px; 
+    height: 398px;
+    
+    /* Дозволяє клікати на елементи форми під потягом */
+    pointer-events: none; 
+}
+
+.railway-svg {
+    position: absolute;
+    left: 29%; /* Розміщуємо потяг праворуч від форми */
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+
+    /* ЗБІЛЬШЕНО РОЗМІР: Змініть це значення, щоб підігнати під ваш дизайн */
+    width: 1080px; 
+    height: 398px;
+    
+    /* Дозволяє клікати на елементи форми під потягом */
+    pointer-events: none; 
+}
+
+.routeSelection form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
+    
+    /* ДОДАНО: Невеликий відступ справа, щоб форми не впиралися в потяг */
+    padding: 2px; 
+}
+
+/* Rectangle 3 */
+
+
+.routeSelection select {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    background: #78B782;
+    border: none;
+    color: #ffffff;
+    outline: none;
+    transition: background 0.3s ease;
+}
+
+.routeSelection select:focus {
+  outline: none;
+}
+
+.routeSelection select:hover {
+    background: rgb(121, 171, 129);
+}
+
+.routeSelection button {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    background: #78B782;
+    color: #ffffff;
+    border: none;
+    outline: none;
+    transition: background 0.3s ease;
+}
+
+.routeSelection button:hover {
+    background: rgb(121, 171, 129);
+}
+
+
+.routeSelection button {
+    cursor: pointer;
+}
+

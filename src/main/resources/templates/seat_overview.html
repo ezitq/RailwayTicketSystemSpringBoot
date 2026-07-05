@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Вибір місць - Залізниця</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ── Базові стилі та Design System ── */
+        :root {
+            --bg-main: #f0f7f2;
+            --text-dark: #1a3d2b;
+            --text-muted: #4a7c5f;
+            --border-color: #d4e8db;
+            --card-bg: #fff;
+
+            --seat-available: #e8f5ee;
+            --seat-hover: #c4dece;
+            --seat-selected: #1a3d2b;
+            --seat-occupied: #d4e8db;
+            --seat-text-selected: #fff;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background: var(--bg-main);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 32px 20px 100px;
+            gap: 20px;
+        }
+
+        .page-header {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .page-eyebrow {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .page-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text-dark);
+            letter-spacing: -0.02em;
+        }
+
+        .main-layout {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+        }
+
+        /* ── Таби класів ── */
+        .class-tabs-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 140px;
+            position: sticky;
+            top: 32px;
+        }
+
+        .class-tab {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 22px;
+            background: var(--card-bg);
+            border-radius: 14px;
+            border: 1.5px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.18s ease;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .class-tab:hover {
+            border-color: var(--text-muted);
+            background: var(--bg-main);
+        }
+
+        .class-tab.active {
+            background: var(--text-dark);
+            border-color: var(--text-dark);
+            color: #fff;
+        }
+
+        .tab-count {
+            font-size: 12px;
+            background: rgba(0,0,0,0.08);
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+        }
+
+        .class-tab.active .tab-count {
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* ── Контейнер вагонів та Легенда ── */
+        .carriages-wrapper {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 0;
+        }
+
+        .legend {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .legend-box {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        .legend-box.free { background: var(--seat-available); }
+        .legend-box.selected { background: var(--seat-selected); outline: 2px solid #2d8c52; outline-offset: 1px; }
+        .legend-box.occupied { background: var(--seat-occupied); opacity: 0.6; }
+
+        .carriages-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .carriage-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            border: 1.5px solid var(--border-color);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.18s, box-shadow 0.18s;
+        }
+
+        .carriage-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--border-color);
+            border-radius: 20px 0 0 20px;
+            transition: background 0.18s;
+        }
+
+        .carriage-card:hover {
+            border-color: var(--text-muted);
+            box-shadow: 0 4px 24px rgba(26, 61, 43, 0.08);
+        }
+
+        .carriage-card:hover::before {
+            background: var(--text-muted);
+        }
+
+        .carriage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .carriage-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+            letter-spacing: -0.02em;
+        }
+
+        .tag-badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 8px;
+            background: var(--seat-available);
+            color: #2d6e47;
+            text-transform: uppercase;
+        }
+
+        /* ── СТРУКТУРА ВАГОНУ ── */
+        .carriage-layout {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-main);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            overflow-x: auto;
+            scrollbar-width: thin;
+        }
+
+        .compartment-row {
+            display: flex;
+            width: fit-content;
+        }
+
+        .aisle {
+            height: 24px;
+            width: 100%;
+        }
+
+        .compartment {
+            display: grid;
+            gap: 12px 6px;
+            padding: 6px;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            border-left: 1px solid var(--border-color);
+        }
+
+        .compartment:last-child {
+            border-right: 1px solid var(--border-color);
+        }
+
+        .comp-4-seats { grid-template-columns: 32px 32px; grid-template-rows: 32px 32px; }
+        .comp-2-seats { grid-template-columns: 32px 32px; grid-template-rows: 32px; }
+
+        .seat {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: var(--seat-available);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.14s ease;
+            user-select: none;
+            width: 100%;
+            height: 100%;
+        }
+
+        .seat:hover:not(.occupied) {
+            background-color: var(--seat-hover);
+            transform: translateY(-2px);
+        }
+
+        .seat.selected {
+            background-color: var(--seat-selected);
+            color: var(--seat-text-selected);
+            box-shadow: 0 4px 12px rgba(26, 61, 43, 0.25);
+            outline: 2px solid #2d8c52;
+            outline-offset: 1px;
+        }
+
+        .seat.occupied {
+            background-color: var(--seat-occupied);
+            color: rgba(26, 61, 43, 0.3);
+            cursor: not-allowed;
+        }
+
+        .loading-state {
+            padding: 40px;
+            text-align: center;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        /* ── ПАНЕЛЬ ДІЙ (Action Bar) ── */
+        .action-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 16px 20px;
+            box-shadow: 0 -4px 24px rgba(26, 61, 43, 0.06);
+            z-index: 100;
+        }
+
+        .action-bar-inner {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .summary-text {
+            flex-grow: 1;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .summary-text.empty {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-back {
+            background: var(--bg-main);
+            color: var(--text-dark);
+            border: 1.5px solid var(--border-color);
+        }
+
+        .btn-back:hover {
+            border-color: var(--text-muted);
+            background: #e8f5ee;
+        }
+
+        .btn-book {
+            background: var(--text-dark);
+            color: #fff;
+        }
+
+        .btn-book:hover:not(:disabled) {
+            background: #0f2419;
+            box-shadow: 0 4px 12px rgba(26, 61, 43, 0.2);
+        }
+
+        .btn-book:disabled {
+            background: var(--border-color);
+            color: rgba(26, 61, 43, 0.5);
+            cursor: not-allowed;
+        }
+
+        /* ── Адаптивність ── */
+        @media (max-width: 768px) {
+            .main-layout { flex-direction: column; }
+            .class-tabs-container {
+                flex-direction: row; width: 100%; overflow-x: auto;
+                position: static; scrollbar-width: none;
+            }
+            .class-tab { flex: 0 0 auto; }
+
+            .action-bar-inner {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .summary-text {
+                flex-basis: 100%;
+                margin-bottom: 8px;
+            }
+            .btn {
+                flex-grow: 1;
+                justify-content: center;
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header class="page-header">
+    <span class="page-eyebrow">Залізниця України</span>
+    <h1 class="page-title">Львів → Одеса</h1>
+</header>
+
+<div class="main-layout">
+    <aside class="class-tabs-container" id="tabs-container">
+        <div class="class-tab active" data-class="platskart">
+            <span>Плацкарт</span>
+            <span class="tab-count" id="count-platskart">-</span>
+        </div>
+        <div class="class-tab" data-class="kupe">
+            <span>Купе</span>
+            <span class="tab-count" id="count-kupe">-</span>
+        </div>
+        <div class="class-tab" data-class="lux">
+            <span>Люкс</span>
+            <span class="tab-count" id="count-lux">-</span>
+        </div>
+    </aside>
+
+    <div class="carriages-wrapper">
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-box free"></div>
+                <span>Вільне</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box selected"></div>
+                <span>Вибране</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box occupied"></div>
+                <span>Зайняте</span>
+            </div>
+        </div>
+
+        <main class="carriages-container" id="carriages-render-area">
+        </main>
+    </div>
+</div>
+
+<div class="action-bar">
+    <div class="action-bar-inner">
+        <button class="btn btn-back" id="btn-back">
+            ← Повернутись
+        </button>
+        <div class="summary-text empty" id="summary-text">
+            Оберіть місця на схемі
+        </div>
+        <button class="btn btn-book" id="btn-book" disabled>
+            Забронювати
+        </button>
+    </div>
+</div>
+
+<script>
+    // ── 1. Конфігурація та Стан ──
+    const MAX_SEATS = 6;
+    const selectedSeats = new Map();
+    let currentClass = 'platskart';
+    let cachedTrainId = null;
+
+    const API_CONFIG = {
+        trainsBaseUrl: '/api/trains',
+        routesBaseUrl: '/api/seats', // Відповідно до ваших контролерів
+        seatTypes: {
+            'platskart': 'REGULAR',
+            'kupe': 'KUPE',
+            'lux': 'LUX'
+        }
+    };
+
+    // ── 2. Робота з API (Бекенд) ──
+    async function fetchTrainId(routeId) {
+        if (cachedTrainId) return cachedTrainId;
+
+        try {
+            const response = await fetch(`${API_CONFIG.trainsBaseUrl}/route/${routeId}`);
+            if (!response.ok) throw new Error(`Помилка отримання потягу: ${response.status}`);
+
+            const trainData = await response.json();
+            const parsedTrainId = trainData.id || trainData.trainId;
+
+            if (!parsedTrainId) throw new Error('Бекенд не повернув ID потяга у обʼєкті Train');
+
+            cachedTrainId = parsedTrainId;
+            return cachedTrainId;
+        } catch (error) {
+            console.error('Помилка при отриманні Train:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * НОВЕ: Отримання точної кількості вільних місць з бекенду
+     */
+    async function fetchFreeSeatsCount(carClass) {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const routeId = urlParams.get('routeId');
+            if (!routeId) return 0;
+
+            const trainId = await fetchTrainId(routeId);
+            const apiSeatType = API_CONFIG.seatTypes[carClass];
+
+            const response = await fetch(`${API_CONFIG.routesBaseUrl}/count/${apiSeatType}/trainId/${trainId}`);
+            if (!response.ok) throw new Error(`Помилка отримання кількості: ${response.status}`);
+
+            const count = await response.json();
+            return parseInt(count) || 0;
+        } catch (error) {
+            console.error(`Помилка отримання лічильника для ${carClass}:`, error);
+            return 0;
+        }
+    }
+
+    async function fetchCarriagesData(carClass) {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const routeId = urlParams.get('routeId');
+
+            if (!routeId) {
+                console.warn('Route ID не знайдено в URL');
+                return [];
+            }
+
+            const trainId = await fetchTrainId(routeId);
+            const apiSeatType = API_CONFIG.seatTypes[carClass];
+
+            const url = `${API_CONFIG.routesBaseUrl}/all/${apiSeatType}/trainId/${trainId}`;
+            const response = await fetch(url);
+
+            if (!response.ok) throw new Error(`Помилка завантаження місць: ${response.status}`);
+
+            const flatSeatsList = await response.json();
+            return adaptApiDataToUI(flatSeatsList, carClass);
+        } catch (error) {
+            console.error('Помилка завантаження даних:', error);
+            return [];
+        }
+    }
+
+    // ── 3. Адаптер з валідацією "Максимум 48 місць" ──
+    function adaptApiDataToUI(flatSeatsList, carClass) {
+        if (!flatSeatsList || flatSeatsList.length === 0) return [];
+
+        const seatsPerCarriage = {
+            'platskart': 48,
+            'kupe': 32,
+            'lux': 16
+        };
+        // Ліміт для даного типу (максимум 48 за умовою)
+        const maxSeats = Math.min(seatsPerCarriage[carClass] || 48, 48);
+
+        const carriagesMap = flatSeatsList.reduce((acc, seatDto) => {
+            let carNum = seatDto.carriageNumber || seatDto.wagonNumber || 1;
+            let seatNum = seatDto.seatNumber || seatDto.number;
+            const isOccupied = seatDto.isOccupied || !seatDto.isFree;
+
+            // БІЗНЕС-ЛОГІКА: Якщо номер місця > максимуму (наприклад, місце 50 в плацкарті),
+            // ми автоматично переносимо його у наступний вагон
+            if (seatNum > maxSeats) {
+                const extraCarriageOffset = Math.floor((seatNum - 1) / maxSeats);
+                carNum = parseInt(carNum) + extraCarriageOffset;
+                seatNum = ((seatNum - 1) % maxSeats) + 1; // Нормалізуємо номер (1..48)
+            }
+
+            if (!acc[carNum]) {
+                acc[carNum] = {
+                    id: `carriage_${carNum}`,
+                    number: `Вагон ${carNum}`,
+                    totalSeats: maxSeats,
+                    occupiedSeats: []
+                };
+            }
+
+            if (isOccupied) {
+                acc[carNum].occupiedSeats.push(seatNum);
+            }
+
+            return acc;
+        }, {});
+
+        return Object.values(carriagesMap).sort((a, b) => {
+            const numA = parseInt(a.number.replace(/\D/g, '')) || 0;
+            const numB = parseInt(b.number.replace(/\D/g, '')) || 0;
+            return numA - numB;
+        });
+    }
+
+    // ── 4. Логіка вибору місць та UI ──
+    function updateActionBar() {
+        const summaryText = document.getElementById('summary-text');
+        const btnBook = document.getElementById('btn-book');
+
+        if (selectedSeats.size === 0) {
+            summaryText.textContent = 'Оберіть місця на схемі';
+            summaryText.classList.add('empty');
+            btnBook.disabled = true;
+            btnBook.textContent = 'Забронювати';
+        } else {
+            summaryText.classList.remove('empty');
+            btnBook.disabled = false;
+            btnBook.textContent = `Забронювати (${selectedSeats.size})`;
+
+            const groupedByCarriage = {};
+            selectedSeats.forEach((details) => {
+                if (!groupedByCarriage[details.carriageNumber]) {
+                    groupedByCarriage[details.carriageNumber] = [];
+                }
+                groupedByCarriage[details.carriageNumber].push(details.seatNumber);
+            });
+
+            const summaryParts = Object.entries(groupedByCarriage).map(([carNum, seats]) => {
+                const sortedSeats = seats.sort((a, b) => a - b).join(', ');
+                return `${carNum} (м. ${sortedSeats})`;
+            });
+
+            summaryText.textContent = `Вибрано: ${summaryParts.join('; ')}`;
+        }
+    }
+
+    function handleSeatSelection(seatElement, carriageId, carriageNumber, seatNumber) {
+        const seatId = `${carriageId}-${seatNumber}`;
+
+        if (selectedSeats.has(seatId)) {
+            selectedSeats.delete(seatId);
+            seatElement.classList.remove('selected');
+        } else {
+            if (selectedSeats.size >= MAX_SEATS) {
+                alert(`Максимальна кількість місць за одне замовлення — ${MAX_SEATS}.`);
+                return;
+            }
+            selectedSeats.set(seatId, { carriageNumber, seatNumber });
+            seatElement.classList.add('selected');
+        }
+        updateActionBar();
+    }
+
+    // ── 5. Генерація DOM (Сітка вагонів) ──
+    function createSeatsLayout(carriage, classType) {
+        const layoutContainer = document.createElement('div');
+        layoutContainer.className = 'carriage-layout';
+        let currentSeatNum = 1;
+
+        function createSeat(seatNum) {
+            const seat = document.createElement('div');
+            seat.className = 'seat';
+            seat.textContent = seatNum;
+
+            if (carriage.occupiedSeats.includes(seatNum)) {
+                seat.classList.add('occupied');
+                seat.title = `Місце ${seatNum} (Зайнято)`;
+            } else {
+                seat.title = `Місце ${seatNum} (Вільне)`;
+                const seatId = `${carriage.id}-${seatNum}`;
+                if (selectedSeats.has(seatId)) seat.classList.add('selected');
+
+                seat.addEventListener('click', () => handleSeatSelection(seat, carriage.id, carriage.number, seatNum));
+            }
+            return seat;
+        }
+
+        function createCompartment(seatsCount, layoutClass) {
+            const comp = document.createElement('div');
+            comp.className = `compartment ${layoutClass}`;
+            for (let i = 0; i < seatsCount; i++) {
+                // Якщо ми дійшли до максимального числа місць у вагоні, припиняємо малювати
+                if (currentSeatNum <= carriage.totalSeats) {
+                    comp.appendChild(createSeat(currentSeatNum++));
+                }
+            }
+            return comp;
+        }
+
+        // Розрахунок кількості купе (для 48 місць це 8 купе у верхньому та нижньому рядах)
+        const compartmentsCount = Math.ceil(carriage.totalSeats / (classType === 'lux' ? 2 : 6));
+
+        if (classType === 'kupe') {
+            const row = document.createElement('div');
+            row.className = 'compartment-row';
+            for (let i = 0; i < 8; i++) row.appendChild(createCompartment(4, 'comp-4-seats'));
+            layoutContainer.appendChild(row);
+        }
+        else if (classType === 'lux') {
+            const row = document.createElement('div');
+            row.className = 'compartment-row';
+            for (let i = 0; i < 8; i++) row.appendChild(createCompartment(2, 'comp-2-seats'));
+            layoutContainer.appendChild(row);
+        }
+        else if (classType === 'platskart') {
+            const topRow = document.createElement('div');
+            topRow.className = 'compartment-row';
+            for (let i = 0; i < 8; i++) topRow.appendChild(createCompartment(4, 'comp-4-seats'));
+            layoutContainer.appendChild(topRow);
+
+            const aisle = document.createElement('div');
+            aisle.className = 'aisle';
+            layoutContainer.appendChild(aisle);
+
+            const bottomRow = document.createElement('div');
+            bottomRow.className = 'compartment-row';
+            for (let i = 0; i < 8; i++) bottomRow.appendChild(createCompartment(2, 'comp-2-seats'));
+            layoutContainer.appendChild(bottomRow);
+        }
+
+        return layoutContainer;
+    }
+
+    async function renderCarriagesForClass(carClass) {
+        const container = document.getElementById('carriages-render-area');
+        container.innerHTML = '<div class="loading-state">Завантаження схеми вагонів...</div>';
+
+        const carriages = await fetchCarriagesData(carClass);
+        container.innerHTML = '';
+
+        if (carriages.length === 0) {
+            container.innerHTML = '<div class="loading-state">На жаль, для цього типу вагонів немає доступних схем або місць.</div>';
+            return;
+        }
+
+        carriages.forEach(carriage => {
+            const availableSeatsCount = carriage.totalSeats - carriage.occupiedSeats.length;
+
+            const carriageCard = document.createElement('div');
+            carriageCard.className = 'carriage-card';
+            carriageCard.innerHTML = `
+                    <div class="carriage-header">
+                        <span class="carriage-title">${carriage.number}</span>
+                        <span class="tag-badge">Вільних місць: ${availableSeatsCount}</span>
+                    </div>
+                `;
+
+            const layout = createSeatsLayout(carriage, carClass);
+            carriageCard.appendChild(layout);
+            container.appendChild(carriageCard);
+        });
+    }
+
+    /**
+     * Завантаження кількості вільних місць для всіх вкладок
+     */
+    async function updateTabCounts() {
+        const types = ['platskart', 'kupe', 'lux'];
+        for (const type of types) {
+            const count = await fetchFreeSeatsCount(type);
+            const badge = document.getElementById(`count-${type}`);
+            if (badge) badge.textContent = count;
+        }
+    }
+
+    // ── 6. Ініціалізація ──
+    document.addEventListener('DOMContentLoaded', () => {
+        const tabsContainer = document.getElementById('tabs-container');
+        const tabs = tabsContainer.querySelectorAll('.class-tab');
+
+        tabsContainer.addEventListener('click', (e) => {
+            const clickedTab = e.target.closest('.class-tab');
+            if (!clickedTab || clickedTab.classList.contains('active')) return;
+
+            tabs.forEach(t => t.classList.remove('active'));
+            clickedTab.classList.add('active');
+
+            const selectedClassType = clickedTab.getAttribute('data-class');
+            renderCarriagesForClass(selectedClassType);
+        });
+
+        document.getElementById('btn-back').addEventListener('click', () => {
+            window.history.back();
+        });
+
+        document.getElementById('btn-book').addEventListener('click', () => {
+            const ticketsData = Array.from(selectedSeats.values());
+            console.log('Дані для відправки на бекенд:', ticketsData);
+            alert('Бронювання успішне! Перенаправлення на сторінку оплати...');
+        });
+
+        // Запускаємо відмальовку активної вкладки та паралельно завантажуємо лічильники для всіх вкладок
+        renderCarriagesForClass(currentClass);
+        updateTabCounts();
+    });
+</script>
+</body>
+</html>

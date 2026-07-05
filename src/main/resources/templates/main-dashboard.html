@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Railway Ticket System</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/main-dashboard.css">
+</head>
+<body>
+<div class="container">
+    <h1>Railway ticket system</h1>
+    <img src="/svg/railway.svg" alt="Railway" class="railway-svg">
+    <div class="content" id="content">
+
+        <h2>Route Selection</h2>
+
+        <div class="routeSelection">
+
+                <select name="stationSelect" id="departureSelect">
+                    <option value="">Завантаження</option>
+                </select>
+                <select name="stationSelect" id="arrivalSelect">
+                    <option value="">Завантаження</option>
+                </select>
+                <button type="button" onclick="onSearchButtonClicked()">Select</button>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const container = document.getElementById('content');
+
+    function runTrainAnimation() {
+        // 1. Створюємо SVG об'єкт
+        const train = document.createElement('object');
+        train.type = 'image/svg+xml';
+        train.data = '/svg/moving_train.svg';
+        train.classList.add('train-icon'); // Клас стилів з вашого CSS
+
+        // 2. Додаємо на сторінку (анімація запускається)
+        container.appendChild(train);
+
+        // 3. Видаляємо потяг, коли він проїхав свій шлях
+        // Якщо потяг їде швидше або повільніше, змініть 3000 (це 3 секунди)
+        setTimeout(() => {
+            if (train.parentNode) {
+                train.remove();
+            }
+        }, 1300);
+    }
+
+    // Запускаємо один раз відразу при завантаженні сторінки
+    runTrainAnimation();
+
+    // Повторюємо весь цикл кожні 10 секунд (10000 мілісекунд)
+    setInterval(runTrainAnimation, 10000);
+
+    fetch('/api/stations/all')
+        .then(response => response.json()) // Отримуємо твій JSON
+        .then(stations => {
+            const selectElement = document.getElementById('departureSelect');
+            selectElement.innerHTML = ''; // Очищаємо текст "Завантаження..."
+
+            // Перебираємо кожну станцію і додаємо її в список
+            stations.forEach(station => {
+                const option = document.createElement('option');
+                option.value = station.id;
+                option.text = station.stationName;
+                selectElement.appendChild(option);
+            });
+        })
+
+    fetch('/api/stations/all')
+        .then(response => response.json()) // Отримуємо твій JSON
+        .then(stations => {
+            const selectElement = document.getElementById('arrivalSelect');
+            selectElement.innerHTML = ''; // Очищаємо текст "Завантаження..."
+
+            // Перебираємо кожну станцію і додаємо її в список
+            stations.forEach(station => {
+                const option = document.createElement('option');
+                option.value = station.id;
+                option.text = station.stationName;
+                selectElement.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Помилка завантаження станцій:', error));
+
+    // Функція, яка спрацьовує при натисканні "Відправити форму"
+    function onSearchButtonClicked() {
+        // Уявимо, що ти дістаєш ID з випадаючих списків
+        const depId = document.getElementById('departureSelect').value;
+        const arrId = document.getElementById('arrivalSelect').value;
+
+        // Ми не робимо запит до бази тут!
+        // Ми просто перекидаємо юзера на нову сторінку і передаємо параметри в URL
+        window.location.href = `/checkout?departureStationId=${depId}&arrivalStationId=${arrId}`;
+    }
+</script>
+
+</body>
+
+</html>

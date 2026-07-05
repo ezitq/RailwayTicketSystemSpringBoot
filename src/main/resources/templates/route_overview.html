@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Маршрути</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            width: 100%;
+            min-height: 100%;
+        }
+
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background: #f0f7f2;
+            color: #1a3d2b;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 32px 20px 48px;
+            gap: 20px;
+        }
+
+        /* ── Header ── */
+        .page-header {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .page-eyebrow {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #4a7c5f;
+        }
+
+        .page-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: #1a3d2b;
+            letter-spacing: -0.02em;
+        }
+
+        /* ── Date picker ── */
+        .date-container {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            scrollbar-width: none;
+        }
+
+        .date-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .date-item {
+            flex: 0 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            padding: 12px 22px;
+            background: #fff;
+            border-radius: 14px;
+            border: 1.5px solid #d4e8db;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            min-width: 90px;
+        }
+
+        .date-item:hover {
+            border-color: #4a7c5f;
+            background: #f0f7f2;
+        }
+
+        .date-item.active {
+            background: #1a3d2b;
+            border-color: #1a3d2b;
+            color: #fff;
+        }
+
+        .date-day {
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1;
+            color: inherit;
+        }
+
+        .date-label {
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #4a7c5f;
+            line-height: 1;
+        }
+
+        .date-item.active .date-label {
+            color: rgba(255, 255, 255, 0.65);
+        }
+
+        .date-price {
+            font-size: 12px;
+            font-weight: 600;
+            color: #2d8c52;
+            line-height: 1;
+        }
+
+        .date-item.active .date-price {
+            color: #7dd9a1;
+        }
+
+        /* ── Section label ── */
+        .section-label {
+            width: 100%;
+            max-width: 900px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #4a7c5f;
+            padding: 4px 0;
+        }
+
+        /* ── Route cards ── */
+        .route-list {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .route-item {
+            background: #fff;
+            border-radius: 20px;
+            border: 1.5px solid #d4e8db;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 0;
+            cursor: pointer;
+            transition: border-color 0.18s, box-shadow 0.18s, transform 0.14s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .route-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #d4e8db;
+            border-radius: 20px 0 0 20px;
+            transition: background 0.18s;
+        }
+
+        .route-item:hover {
+            border-color: #4a7c5f;
+            box-shadow: 0 4px 24px rgba(26, 61, 43, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .route-item:hover::before {
+            background: #4a7c5f;
+        }
+
+        .route-item.featured::before {
+            background: #2d8c52;
+        }
+
+        /* Station group */
+        .station-group {
+            flex: 1 1 0;
+            display: flex;
+            align-items: center;
+            gap: 0;
+            min-width: 0;
+        }
+
+        .station-block {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .station-time {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a3d2b;
+            line-height: 1;
+            letter-spacing: -0.03em;
+        }
+
+        .station-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #4a7c5f;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 140px;
+        }
+
+        /* Connector */
+        .route-connector {
+            flex: 0 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 0 18px;
+        }
+
+        .connector-line {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .connector-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #c4dece;
+            flex-shrink: 0;
+        }
+
+        .connector-dot.filled {
+            background: #4a7c5f;
+        }
+
+        .connector-dashes {
+            display: flex;
+            gap: 3px;
+        }
+
+        .connector-dash {
+            width: 14px;
+            height: 2px;
+            background: #c4dece;
+            border-radius: 2px;
+        }
+
+        .connector-arrow {
+            width: 0;
+            height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 7px solid #c4dece;
+        }
+
+        .connector-duration {
+            font-size: 11px;
+            font-weight: 600;
+            color: #7aaa8e;
+            letter-spacing: 0.04em;
+        }
+
+        /* Detail group */
+        .detail-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        .tag-badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 8px;
+            background: #e8f5ee;
+            color: #2d6e47;
+            white-space: nowrap;
+        }
+
+        .tag-badge.seats {
+            background: #fff8ec;
+            color: #b86d10;
+        }
+
+        .time-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1px;
+            padding: 10px 16px;
+            background: #f0f7f2;
+            border-radius: 12px;
+            min-width: 72px;
+            text-align: center;
+        }
+
+        .time-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #7aaa8e;
+        }
+
+        .time-value {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1a3d2b;
+        }
+
+        .price-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1px;
+            padding: 10px 18px;
+            background: #1a3d2b;
+            border-radius: 12px;
+            min-width: 90px;
+            text-align: center;
+        }
+
+        .price-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .price-value {
+            font-size: 17px;
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .station-name {
+                max-width: 90px;
+                font-size: 11px;
+            }
+
+            .station-time {
+                font-size: 18px;
+            }
+
+            .tag-badge {
+                display: none;
+            }
+
+            .route-connector {
+                padding: 0 10px;
+            }
+
+            .connector-dashes .connector-dash:nth-child(n+3) {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header class="page-header">
+    <span class="page-eyebrow">Залізниця України</span>
+    <h1 class="page-title" id="route-name">Київ → Львів</h1>
+</header>
+
+<!-- Date picker -->
+<div class="date-container">
+    <div class="date-item active">
+        <span class="date-day"></span>
+        <span class="date-label"></span>
+        <span class="date-price">₴</span>
+    </div>
+    <div class="date-item">
+        <span class="date-day">24</span>
+        <span class="date-label">Вт</span>
+        <span class="date-price">від 420 ₴</span>
+    </div>
+    <div class="date-item">
+        <span class="date-day">25</span>
+        <span class="date-label">Ср</span>
+        <span class="date-price">від 380 ₴</span>
+    </div>
+    <div class="date-item">
+        <span class="date-day">26</span>
+        <span class="date-label">Чт</span>
+        <span class="date-price">від 420 ₴</span>
+    </div>
+    <div class="date-item">
+        <span class="date-day">27</span>
+        <span class="date-label">Пт</span>
+        <span class="date-price">від 550 ₴</span>
+    </div>
+    <div class="date-item">
+        <span class="date-day">28</span>
+        <span class="date-label">Сб</span>
+        <span class="date-price">від 610 ₴</span>
+    </div>
+    <div class="date-item">
+        <span class="date-day">29</span>
+        <span class="date-label">Нд</span>
+        <span class="date-price">від 590 ₴</span>
+    </div>
+</div>
+
+<div class="section-label"></div>
+
+<!-- Route list -->
+<div class="routes-list" id="routes-list">
+
+
+</div>
+<script>
+
+    // ── Константи та стан ──────────────────────────────
+    const DAY_NAMES = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY',
+        'THURSDAY', 'FRIDAY', 'SATURDAY'];
+
+    let selectedDate = DAY_NAMES[new Date().getDay()]; // одразу є значення
+
+    const url = new URL(window.location.href);
+    const departId = url.searchParams.get('departureStationId');
+    const arrivalId = url.searchParams.get('arrivalStationId');
+    const sectionLabel = document.querySelector('.section-label');
+
+    // ── Рендер маршрутів ───────────────────────────────
+    function renderRoutes(routes) {
+        const container = document.getElementById('routes-list');
+        container.innerHTML = '';
+
+        if (!routes || routes.length === 0) {
+            container.innerHTML = `<div class="no-results">Маршрутів не знайдено.</div>`;
+            return;
+        }
+
+        routes.forEach(route => {
+            const fmt = t => t ? t.substring(0, 5) : '--:--';
+            container.insertAdjacentHTML('beforeend', `
+        <div class="route-item" onclick="onRouteClick(${route.routeId})">
+            <div class="station-group">
+                <div class="station-block">
+
+                    <span class="station-time">${fmt(route.departureTime)}</span>
+                    <span class="station-name">${route.departureStation}</span>
+                </div>
+                <div class="route-connector">
+                    <div class="connector-line">
+                        <div class="connector-dot filled"></div>
+                        <div class="connector-dashes">
+                            <div class="connector-dash"></div>
+                            <div class="connector-dash"></div>
+                            <div class="connector-dash"></div>
+                            <div class="connector-dash"></div>
+                        </div>
+                        <div class="connector-arrow"></div>
+                    </div>
+                    <span class="connector-duration">${route.duration}</span>
+                </div>
+                <div class="station-block">
+                    <span class="station-time">${fmt(route.arrivalTime)}</span>
+                    <span class="station-name">${route.arrivalStation}</span>
+                </div>
+            </div>
+            <div class="detail-group">
+                <span class="tag-badge">${route.classType}</span>
+                <div class="time-item">
+                    <span class="time-label">Місць</span>
+                    <span class="time-value">${route.availableSeats}</span>
+                </div>
+                <div class="price-item">
+                    <span class="price-label">Від</span>
+                    <span class="price-value">${new Intl.NumberFormat('uk-UA').format(route.price)} ₴</span>
+                </div>
+            </div>
+        </div>`);
+        });
+    }
+
+    // ── Запит до сервера ───────────────────────────────
+    async function handleSearch() {
+        if (!departId || !arrivalId) {
+            console.warn('Пошук скасовано: відсутні ID станцій в URL');
+            return;
+        }
+        try {
+            const params = new URLSearchParams({
+                departId, arrivalId, weekDay: selectedDate
+            });
+            const res = await fetch(`/api/routes/search?${params}`);
+            if (!res.ok) throw new Error('Помилка сервера');
+            renderRoutes(await res.json());
+        } catch (e) {
+            console.error('Помилка завантаження:', e);
+            document.getElementById('routes-list').innerHTML =
+                `<div class="no-results">Помилка зв'язку з сервером.</div>`;
+        }
+    }
+
+    // ── Назва маршруту ─────────────────────────────────
+    async function loadRouteName(depId, arrId) {
+        const routeName = document.getElementById('route-name');
+        routeName.textContent = 'Завантаження...';
+        try {
+            const [dep, arr] = await Promise.all([
+                fetch(`/api/stations/find/${depId}`).then(r => r.text()),
+                fetch(`/api/stations/find/${arrId}`).then(r => r.text()),
+            ]);
+            routeName.textContent = `${dep} → ${arr}`;
+        } catch {
+            routeName.textContent = 'Маршрут не знайдено';
+        }
+    }
+
+    function onRouteClick(routeId) {
+
+        window.location.href = `/book-seat?routeId=${routeId}`;
+    }
+
+
+    // ── Ініціалізація карток дат ────────────────────────
+    function initDatePicker() {
+        const cards = document.querySelectorAll('.date-item');
+
+        cards.forEach((card, index) => {
+            const date = new Date();
+            date.setDate(date.getDate() + index);
+
+            const dayName = DAY_NAMES[date.getDay()];
+            const ukLabel = date.toLocaleDateString('uk-UA', {weekday: 'long'});
+            const dayNum = date.getDate().toString();
+            const parts = new Intl.DateTimeFormat('uk-UA', {day: 'numeric', month: 'long'})
+                .formatToParts(date);
+            const monthStr = parts.find(p => p.type === 'month').value;
+
+            card.querySelector('.date-day').textContent = dayNum;
+            card.querySelector('.date-label').textContent = ukLabel;
+
+            if (index === 0) {
+                sectionLabel.textContent = `${dayNum} ${monthStr}`; // без window.onload
+            }
+
+            card.addEventListener('click', () => {
+                document.querySelector('.date-item.active')?.classList.remove('active');
+                card.classList.add('active');
+                sectionLabel.textContent = `${dayNum} ${monthStr}`;
+                selectedDate = dayName;   // англійська для API
+                handleSearch();
+            });
+        });
+    }
+
+    // ── Точка входу ────────────────────────────────────
+    loadRouteName(departId, arrivalId);
+    initDatePicker();
+    handleSearch();        // selectedDate вже заповнений вгорі
+
+</script>
+</body>
+</html>
