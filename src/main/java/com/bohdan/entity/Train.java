@@ -13,6 +13,10 @@ public class Train {
     @Column(name = "seats_amount")
     private int amountOfSeats;
 
+    @Column(name = "type")
+    @Enumerated(value = EnumType.STRING)
+    private ComfortType type;
+
     public Train() {
     }
 
@@ -30,5 +34,13 @@ public class Train {
 
     public void setAmountOfSeats(int amountOfSeats) {
         this.amountOfSeats = amountOfSeats;
+    }
+
+    public ComfortType getType() {
+        return type;
+    }
+
+    public void setType(ComfortType type) {
+        this.type = type;
     }
 }
